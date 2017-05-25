@@ -1,6 +1,8 @@
 # SuperRecyclerView
  [ ![Download](https://api.bintray.com/packages/nicolkill/android/SuperRecyclerView/images/download.svg) ](https://bintray.com/nicolkill/android/SuperRecyclerView/_latestVersion)
 
+Super RecyclerView is a fearless RecyclerView Adapter that helps to focus only on your view, binding the data that you want to show in the components of your design.
+
 ## Usage
 ### Step 1:
 #### Add gradle dependecy

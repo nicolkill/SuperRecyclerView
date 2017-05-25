@@ -65,6 +65,16 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
     private ItemsAnimationListener mItemsAnimationListener;
     private AnimationWatcher mAnimationWatcher;
 
+    public SuperRecyclerAdapter(RecyclerView recyclerView, List<T> objects) {
+        this(recyclerView);
+        setElements(objects);
+    }
+
+    public SuperRecyclerAdapter(RecyclerView recyclerView) {
+        this();
+        recyclerView.setAdapter(this);
+    }
+
     public SuperRecyclerAdapter() {
         this(new LinkedList<T>());
     }
@@ -72,6 +82,7 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
     public SuperRecyclerAdapter(List<T> objects) {
         setElements(objects);
     }
+
 
     /**
      * Cuando el RecyclerView tiene que crear un elemento de la lista, llama a este metodo
@@ -103,7 +114,7 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
                     @Override
                     public void onAnimationStart(Animation animation) {
                         if (mAnimationWatcher == null) {
-                            mAnimationWatcher = new AnimationWatcher();
+                            mAnimationWatcher = new AnimationWatcher(mItemsAnimationListener);
                         } else {
                             mAnimationWatcher.add();
                         }
@@ -522,9 +533,11 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
 
     private class AnimationWatcher extends Thread {
 
+        private ItemsAnimationListener mAnimationListener;
         private int mIgnoreCount = 0;
 
-        public AnimationWatcher() {
+        public AnimationWatcher(ItemsAnimationListener listener) {
+            mAnimationListener = listener;
             start();
         }
 
@@ -536,10 +549,15 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
 
         @Override
         public void run() {
-            mItemsAnimationListener.onAnimationStart();
-            while (mIgnoreCount > 0) {
+            mAnimationListener.onAnimationStart();
+            try {
+                synchronized (this) {
+                    wait();
+                }
+            } catch (InterruptedException e) {
+                Log.e(TAG, e.getMessage(), e);
             }
-            mItemsAnimationListener.onAnimationEnd();
+            mAnimationListener.onAnimationEnd();
             mAnimationWatcher = null;
         }
 
@@ -549,6 +567,11 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
 
         public void remove() {
             mIgnoreCount--;
+            if (mIgnoreCount == 0) {
+                synchronized (this) {
+                    notify();
+                }
+            }
         }
     }
 
