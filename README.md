@@ -1,4 +1,4 @@
-# Android Material Intro Screen
+# Super RecyclerView
  [ ![Download](https://api.bintray.com/packages/nicolkill/android/SuperRecyclerView/images/download.svg) ](https://bintray.com/nicolkill/android/SuperRecyclerView/_latestVersion)
  [![Build Status](https://travis-ci.org/nicolkill/SuperRecyclerView.svg?branch=master)](https://travis-ci.org/TangoAgency/material-intro-screen)
 
