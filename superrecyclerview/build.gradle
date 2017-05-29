@@ -3,6 +3,12 @@ apply plugin: 'com.android.library'
 group = 'com.nicolkill'
 version = '1.0.0'
 
+ext {
+    PUBLISH_GROUP_ID = 'com.nicolkill'
+    PUBLISH_ARTIFACT_ID = 'superrecyclerview'
+    PUBLISH_VERSION = '1.0.0'
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -19,6 +25,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
@@ -32,3 +42,5 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.android.support:recyclerview-v7:25.3.1'
 }
+
+apply from: 'https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle'
