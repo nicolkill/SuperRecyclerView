@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             options.add(new Option(i));
         }
 
-        SuperRecyclerAdapter<Option> adapter = new SuperRecyclerAdapter<>(options);
+        SuperRecyclerAdapter<Option> adapter = new SuperRecyclerAdapter<>((RecyclerView) findViewById(R.id.recycler), options);
 
 //        Basic click listeners
         adapter.setOnClickListener(new ClickListener<Option>() {
@@ -120,9 +120,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         adapter.disableAnimationOnEnd();
-
-        ((RecyclerView) findViewById(R.id.recycler))
-                .setAdapter(adapter);
     }
 
 }
