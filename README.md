@@ -1,5 +1,6 @@
-# Android Material Intro Screen
+# Super RecyclerView
  [ ![Download](https://api.bintray.com/packages/nicolkill/android/SuperRecyclerView/images/download.svg) ](https://bintray.com/nicolkill/android/SuperRecyclerView/_latestVersion)
+ [![Build Status](https://travis-ci.org/nicolkill/SuperRecyclerView.svg?branch=master)](https://travis-ci.org/TangoAgency/material-intro-screen)
 
 **Super RecyclerView** is a library that helps to use RecyclerView adapter without code, just using annotations on your class, creating Collection of that class and creating Adapter that parametrize that class, and its all.
 
@@ -11,16 +12,7 @@
   - Data events (new, remove and replace single and all data)
   - Animations, single animation listener
 
-## **How it works**
-```flow
-start=>start: Your class
-adapter=>operation: SuperRecyclerAdapter magic!
-end=>end: View
-
-start->adapter->end
-```
-
-## It's all, you can know more if you see the code, all it's on [SuperRecyclerAdapter](https://github.com/nicolkill/SuperRecyclerView/blob/master/superrecyclerview/src/main/java/com/nicolkill/superrecyclerview/SuperRecyclerAdapter.java) file
+## You can know how it works if you see the code, all it's on [SuperRecyclerAdapter](https://github.com/nicolkill/SuperRecyclerView/blob/master/superrecyclerview/src/main/java/com/nicolkill/superrecyclerview/SuperRecyclerAdapter.java) file
 
 ### ***For more functions or bugs, create a [issue](https://github.com/nicolkill/SuperRecyclerView/issues).***
 
