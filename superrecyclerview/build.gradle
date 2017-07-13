@@ -3,10 +3,10 @@ apply plugin: 'com.android.library'
 ext {
     PUBLISH_GROUP_ID = 'com.nicolkill'
     PUBLISH_ARTIFACT_ID = 'superrecyclerview'
-    PUBLISH_VERSION = '1.0.1'
+    PUBLISH_VERSION = '1.0.2'
 }
 
-group = 'com.nicolkill'
+group = PUBLISH_GROUP_ID
 version = PUBLISH_VERSION
 
 android {
@@ -38,3 +38,7 @@ dependencies {
 }
 
 apply from: 'https://raw.githubusercontent.com/blundell/release-android-library/master/android-release-aar.gradle'
+
+/*
+./gradlew clean build generateRelease
+ */
