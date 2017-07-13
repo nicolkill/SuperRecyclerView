@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.AnimRes;
 import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,7 +38,13 @@ import java.util.List;
  * Created by Nicol Acosta on 10/27/16.
  * nicol@parkiller.com
  */
-public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerAdapter.SuperViewHolder> implements ClickEvents {
+public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements ClickEvents {
+
+    private static class ViewTypes {
+        private static final int HEADER = 1;
+        private static final int NORMAL = 2;
+        private static final int FOOTER = 3;
+    }
 
     private static final String TAG = SuperRecyclerAdapter.class.getSimpleName();
 
@@ -65,24 +72,20 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
     private ItemsAnimationListener mItemsAnimationListener;
     private AnimationWatcher mAnimationWatcher;
 
-    public SuperRecyclerAdapter(RecyclerView recyclerView, List<T> objects) {
-        this(recyclerView);
-        setElements(objects);
-    }
+    private View mHeaderView;
+    private View mFooterView;
+
+    private RecyclerView mRecyclerView;
 
     public SuperRecyclerAdapter(RecyclerView recyclerView) {
-        this();
-        recyclerView.setAdapter(this);
+        this(recyclerView, new LinkedList<T>());
     }
 
-    public SuperRecyclerAdapter() {
-        this(new LinkedList<T>());
-    }
-
-    public SuperRecyclerAdapter(List<T> objects) {
+    public SuperRecyclerAdapter(RecyclerView recyclerView, List<T> objects) {
         setElements(objects);
+        mRecyclerView = recyclerView;
+        mRecyclerView.setAdapter(this);
     }
-
 
     /**
      * Cuando el RecyclerView tiene que crear un elemento de la lista, llama a este metodo
@@ -91,19 +94,34 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
      * @return vista preparada para mostrar un elemento
      */
     @Override
-    public SuperRecyclerAdapter.SuperViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        View itemView = LayoutInflater.from(viewGroup.getContext()).inflate(mViewLayout, viewGroup, false);
-        return new SuperViewHolder(this, itemView);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        if (viewType == ViewTypes.HEADER) {
+            return new HeaderFooterViewHolder(mHeaderView);
+        }
+        if (viewType == ViewTypes.NORMAL) {
+            return new SuperViewHolder(this, LayoutInflater.from(viewGroup.getContext()).inflate(mViewLayout, viewGroup, false));
+        }
+        if (viewType == ViewTypes.FOOTER) {
+            return new HeaderFooterViewHolder(mFooterView);
+        }
+        return null;
     }
 
     /**
      * Cuando el RecyclerView necesita mostrar los datos en un elemento de la lista, llama a este metodo
-     * @param viewHolder contenedor de la vista
+     * @param mViewHolder contenedor de la vista
      * @param position posicion del elemento de la vista
      */
     @Override
-    public void onBindViewHolder(SuperRecyclerAdapter.SuperViewHolder viewHolder, int position) {
-        viewHolder.bindViewHolder(mObjects.get(position));
+    public void onBindViewHolder(RecyclerView.ViewHolder mViewHolder, int position) {
+        if (hasHeader() && position == 0) {
+            return;
+        }
+        if (hasFooter() && position == getItemCount() - 1) {
+            return;
+        }
+        SuperViewHolder viewHolder = (SuperViewHolder) mViewHolder;
+        viewHolder.bindViewHolder(mObjects.get(position - (hasHeader() ? 1:0)));
         viewHolder.addClickListenerOnViews(mViewListeners);
         viewHolder.hideViews(mHiddenViews);
         viewHolder.applyFilterToImages(mImageFilters, mFilterApplicators);
@@ -136,13 +154,63 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
         }
     }
 
+    public void setHeaderView(View headerView) {
+        mHeaderView = headerView;
+        configureLayoutManager(mRecyclerView.getLayoutManager());
+        notifyDataSetChanged();
+    }
+
+    public void setFooterView(View footerView) {
+        mFooterView = footerView;
+        configureLayoutManager(mRecyclerView.getLayoutManager());
+        notifyDataSetChanged();
+    }
+
+    private void configureLayoutManager(RecyclerView.LayoutManager layoutManager) {
+        if (layoutManager instanceof GridLayoutManager) {
+            final GridLayoutManager manager = (GridLayoutManager) layoutManager;
+            manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                @Override
+                public int getSpanSize(int position) {
+                    return (hasHeader() && position == 0) || (hasFooter() && position == getItemCount() - 1)  ? manager.getSpanCount() : 1;
+                }
+            });
+        }
+    }
+
+    private boolean hasHeader() {
+        return mHeaderView != null;
+    }
+
+    private boolean hasFooter() {
+        return mFooterView != null;
+    }
+
     /**
      * Cuando el RecyclerView necesita saber cuantos elementos tiene la lista, llama a este metodo
      * @return cantidad de elementos de la lista
      */
     @Override
     public int getItemCount() {
-        return mObjects.size();
+        int extra = 0;
+        if (hasHeader()) {
+            extra++;
+        }
+        if (hasFooter()) {
+            extra++;
+        }
+        return mObjects.size() + extra;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (hasHeader() && position == 0) {
+            return ViewTypes.HEADER;
+        }
+        if (hasFooter() && position == getItemCount() - 1) {
+            return ViewTypes.FOOTER;
+        }
+        return ViewTypes.NORMAL;
     }
 
     /**
@@ -321,14 +389,14 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
     @Override
     public void onClick(View view, int position) {
         if (mClickListener != null) {
-            mClickListener.onItemSelected(view, position, mObjects.get(position));
+            mClickListener.onItemSelected(view, position, mObjects.get(position - (hasHeader() ? 1:0)));
         }
     }
 
     @Override
     public void onLongClick(View view, int position) {
         if (mLongClickListener != null) {
-            mLongClickListener.onLongClickItemSelected(view, position, mObjects.get(position));
+            mLongClickListener.onLongClickItemSelected(view, position, mObjects.get(position - (hasHeader() ? 1:0)));
         }
     }
 
@@ -426,22 +494,22 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
                                     text(view, objInvoked);
                                     break;
                                 case IMAGE:
-                                    image(method, view, objInvoked);
+                                    image(view, objInvoked);
                                     break;
                                 case VISIBLE:
-                                    visible(method, view, objInvoked);
+                                    visible(view, objInvoked);
                                     break;
                                 case GONE:
-                                    gone(method, view, objInvoked);
+                                    gone(view, objInvoked);
                                     break;
                                 case CHECKED:
-                                    checked(method, view, objInvoked);
+                                    checked(view, objInvoked);
                                     break;
                                 case ENABLED:
-                                    enabled(method, view, objInvoked);
+                                    enabled(view, objInvoked);
                                     break;
                                 case BACKGROUND:
-                                    background(method, view, objInvoked);
+                                    background(view, objInvoked);
                                     break;
                             }
                         } catch (Exception e) {
@@ -458,11 +526,11 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
             ((TextView) view).setText(object.toString());
         }
 
-        private void image(Method method, View view, Object object) {
+        private void image(View view, Object object) {
             ImageView imageView = (ImageView) view;
-            if (method.getReturnType().equals(Integer.class)) {
+            if (object.getClass().equals(Integer.class)) {
                 imageView.setImageResource(Integer.parseInt(object.toString()));
-            } else if (method.getReturnType().equals(String.class)) {
+            } else if (object.getClass().equals(String.class)) {
                 if (!object.toString().isEmpty()) {
                     Picasso.with(itemView.getContext()).cancelRequest(imageView);
                     Picasso.with(itemView.getContext())
@@ -474,45 +542,37 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
             }
         }
 
-        private void visible(Method method, View view, Object object) {
-            if (transformToBoolean(method, object)) {
-                view.setVisibility(View.VISIBLE);
-            } else {
-                view.setVisibility(View.INVISIBLE);
-            }
+        private void visible(View view, Object object) {
+            view.setVisibility(transformToBoolean(object) ? View.VISIBLE:View.INVISIBLE);
         }
 
-        private void gone(Method method, View view, Object object) {
-            if (transformToBoolean(method, object)) {
-                view.setVisibility(View.VISIBLE);
-            } else {
-                view.setVisibility(View.GONE);
-            }
+        private void gone(View view, Object object) {
+            view.setVisibility(transformToBoolean(object) ? View.VISIBLE:View.GONE);
         }
 
-        private void checked(Method method, View view, Object object) {
+        private void checked(View view, Object object) {
             CompoundButton checkable = (CompoundButton) view;
-            checkable.setChecked(transformToBoolean(method, object));
+            checkable.setChecked(transformToBoolean(object));
         }
 
-        private void enabled(Method method, View view, Object object) {
-            view.setEnabled(transformToBoolean(method, object));
+        private void enabled(View view, Object object) {
+            view.setEnabled(transformToBoolean(object));
         }
 
-        private Boolean transformToBoolean(Method method, Object object) {
-            if (method.getReturnType().equals(Boolean.class)) {
+        private Boolean transformToBoolean(Object object) {
+            if (object.getClass().equals(Boolean.class)) {
                 return ((Boolean) object);
-            } else if (method.getReturnType().equals(Integer.class)) {
+            } else if (object.getClass().equals(Integer.class)) {
                 return ((Integer) object) >= 1;
             } else {
                 throw new IllegalStateException("The parameter method need be Boolean, Integer");
             }
         }
 
-        private void background(Method method, View view, Object object) {
-            if (method.getReturnType().equals(Integer.class)) {
+        private void background(View view, Object object) {
+            if (object.getClass().equals(Integer.class)) {
                 view.setBackgroundResource(Integer.parseInt(object.toString()));
-            } else if (method.getReturnType().equals(Drawable.class)) {
+            } else if (object.getClass().equals(Drawable.class)) {
                 view.setBackgroundDrawable((Drawable) object);
             } else {
                 throw new IllegalStateException("The parameter method need be Integer, Drawable");
@@ -529,6 +589,14 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<SuperRecyclerA
             mClickEvents.onLongClick(view, getLayoutPosition());
             return true;
         }
+    }
+
+    class HeaderFooterViewHolder extends RecyclerView.ViewHolder {
+
+        public HeaderFooterViewHolder(View itemView) {
+            super(itemView);
+        }
+
     }
 
     private class AnimationWatcher extends Thread {
