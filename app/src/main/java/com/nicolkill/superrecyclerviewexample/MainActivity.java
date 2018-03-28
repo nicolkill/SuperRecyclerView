@@ -36,7 +36,9 @@ public class MainActivity extends AppCompatActivity {
             options.add(new Option(i));
         }
 
-        SuperRecyclerAdapter<Option> adapter = new SuperRecyclerAdapter<>((RecyclerView) findViewById(R.id.recycler), options);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler);
+        recyclerView.setNestedScrollingEnabled(false);
+        SuperRecyclerAdapter<Option> adapter = new SuperRecyclerAdapter<>(recyclerView, options);
 
 //        Basic click listeners
         adapter.setOnClickListener(new ClickListener<Option>() {
