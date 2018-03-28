@@ -513,10 +513,10 @@ public class SuperRecyclerAdapter<T> extends RecyclerView.Adapter<RecyclerView.V
                                     break;
                             }
                         } catch (Exception e) {
-                            view.setVisibility(View.GONE);
+                            if (view != null) view.setVisibility(View.GONE);
                         }
                     } else {
-                        view.setVisibility(View.GONE);
+                        if (view != null) view.setVisibility(View.GONE);
                     }
                 }
             }
